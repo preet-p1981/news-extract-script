@@ -1,0 +1,34 @@
+name: Daily India Stock News Email
+
+on:
+  schedule:
+    # GitHub Actions cron always uses UTC. 3:37 UTC = 9:07 AM IST.
+    # Offset from the exact hour on purpose - scheduled jobs right at :00
+    # are more likely to be delayed when GitHub's scheduler is under load.
+    - cron: '37 3 * * *'
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab, for testing
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install feedparser
+
+      - name: Run news mailer
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: python india_daily_stock_news_mailer.py --n 30
